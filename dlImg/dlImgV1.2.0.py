@@ -106,6 +106,7 @@ if response.status_code == 200:
 
             progress_bar.update(1)  # Update the progress bar
         elif "/v/" in href:  # Check if it's an image link
+            # # TODO(rlj): get video link from html.
             # direct_image_link = 'https://burger.bunkr.ru/{}'.format(href.strip('/').split('/')[-1])
             direct_image_link = 'https://taquito.bunkr.ru/{}'.format(href.strip('/').split('/')[-1])
             # Extract the filename from the direct image link
