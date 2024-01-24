@@ -29,11 +29,12 @@ def _download(download_folder, filename):
         print(image_response.text)
         print(f"Download failed for image {i + 1}: {filename}")
 
+UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 headers = {
-        #'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
-        #'Referer': 'https://bunkrr.su/',
-        'Host': 'bunkrr.su',
-        'User-Agent': 'curl/7.88.1',
+        'User-Agent': UA,
+        'Referer': 'https://bunkrr.su/',
+        #'Host': 'bunkrr.su',
+        #'User-Agent': 'curl/7.88.1',
 }
 
 scraper = cloudscraper.create_scraper()
@@ -80,6 +81,11 @@ if response.status_code == 200:
         href = anchor_tag["href"]
         if "/i/" in href:  # Check if it's an image link
             image_page_url = f"https://bunkrr.su{href}"  # Construct the image page URL
+            filename = href.replace('/i/', '')
+            if os.path.exists(os.path.join(download_folder, filename)):
+                print(f"\nFile exists: {filename}")
+                progress_bar.update(1)  # Update the progress bar
+                continue
             image_page_response = req_get(image_page_url)
             if image_page_response.status_code == 200:
                 image_soup = BeautifulSoup(image_page_response.text, "html.parser")
@@ -100,14 +106,23 @@ if response.status_code == 200:
 
             progress_bar.update(1)  # Update the progress bar
         elif "/v/" in href:  # Check if it's an image link
-            direct_image_link = 'https://burger.bunkr.ru/{}'.format(href.strip('/').split('/')[-1])
+            # direct_image_link = 'https://burger.bunkr.ru/{}'.format(href.strip('/').split('/')[-1])
+            direct_image_link = 'https://taquito.bunkr.ru/{}'.format(href.strip('/').split('/')[-1])
             # Extract the filename from the direct image link
             filename = os.path.basename(urlparse(direct_image_link).path)
 
             # Check if the file already exists in the download folder
             if not os.path.exists(os.path.join(download_folder, filename)):
                 #_download(download_folder, filename)
-                subprocess.check_call(['wget', f'--directory-prefix={download_folder}', direct_image_link])
+                subprocess.check_call([
+                    'wget',
+                    '-d',
+                    f'--directory-prefix={download_folder}',
+                    f'--header=User-Agent: {UA}',
+                    '--header=Referer: https://bunkrr.ru/',
+                    '--header=Range: bytes=0-',
+                    direct_image_link,
+                ])
             else:
                 print(f"\nFile exists: {filename}")
 
@@ -116,4 +131,3 @@ if response.status_code == 200:
 
 else:
     print(f"Failed to fetch the gallery page. Status code: {response.status_code}")
-
